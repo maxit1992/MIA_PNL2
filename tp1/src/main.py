@@ -1,3 +1,9 @@
+"""
+This script implements a Streamlit-based CV Chat Bot application. The application allows users to upload CVs, process
+them to extract chunks of text, store the chunks in a vector database, and interact with the bot to ask questions about
+the uploaded CVs.
+"""
+
 import os
 
 import streamlit as st
@@ -9,14 +15,12 @@ from VectorDB import VectorDB
 # Start the Streamlit app
 st.title("CV Chat Bot")
 
-# Initialize the Session
+# Initialize/Restore the Session
 if "vectorDB" not in st.session_state:
     st.session_state["vectorDB"] = VectorDB()
-vector_db = st.session_state.vectorDB
 
 if "chatbot" not in st.session_state:
     st.session_state["chatbot"] = Chat()
-chatbot = st.session_state.chatbot
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -34,7 +38,8 @@ if uploaded_cv:
     with open(temp_file, 'wb') as output_temporary_file:
         output_temporary_file.write(uploaded_cv.read())
     text_provider = TextProvider(temp_file)
-    text = text_provider.get_chunks(100)
+    text = text_provider.get_chunks(chunk_max_size=256)
+    vector_db = st.session_state.vectorDB
     vector_db.save_text(text)
     os.remove(temp_file)
     st.session_state["uploader_key"] += 1
@@ -53,7 +58,9 @@ if question:
         st.markdown(question)
 
     # Search For context
+    vector_db = st.session_state.vectorDB
     context = vector_db.get_similar_text(question)
+    chatbot = st.session_state.chatbot
     answer = chatbot.answer(question, context)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
