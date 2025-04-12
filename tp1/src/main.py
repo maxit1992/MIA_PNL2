@@ -38,7 +38,7 @@ if uploaded_cv:
     with open(temp_file, 'wb') as output_temporary_file:
         output_temporary_file.write(uploaded_cv.read())
     text_provider = TextProvider(temp_file)
-    text = text_provider.get_chunks(chunk_max_size=256)
+    text = text_provider.get_chunks(chunk_max_size=512)
     vector_db = st.session_state.vectorDB
     vector_db.save_text(text)
     os.remove(temp_file)
@@ -59,7 +59,7 @@ if question:
 
     # Search For context
     vector_db = st.session_state.vectorDB
-    context = vector_db.get_similar_text(question)
+    context = vector_db.get_similar_text(question, top_k=2)
     chatbot = st.session_state.chatbot
     answer = chatbot.answer(question, context)
 
