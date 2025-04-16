@@ -1,0 +1,11 @@
+pinecone
+groq
+pymupdf
+transformers
+streamlit
+langchain
+langchain-core
+langgraph
+pygraphviz
+networkx
+matplotlib
