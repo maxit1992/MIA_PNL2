@@ -26,7 +26,7 @@ class AgentLLM:
         Returns:
             str: A greeting message from the agent.
         """
-        return f"Hello, I am a principal LLM agent. I can answer questions about multiple candidates CVs, based on the answers retrieved from different CV agents."
+        return "Hello, I am a principal LLM agent. I can answer questions about multiple candidates CVs, based on the answers retrieved from different CV agents."
 
     def answer(self, question: str, context: {}):
         """

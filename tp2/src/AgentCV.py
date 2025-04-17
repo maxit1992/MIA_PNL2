@@ -23,7 +23,7 @@ class AgentCV:
         self.agent_name = agent_name
         self.vector_db = VectorDB(index_name=agent_name.lower().replace(' ', '-'))
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-        self.save_cv(cv_file)
+        #self.save_cv(cv_file)
 
     def save_cv(self, cv_file: str):
         """

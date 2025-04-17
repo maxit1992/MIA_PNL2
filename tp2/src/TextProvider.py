@@ -54,7 +54,6 @@ class TextProvider:
             sys_prompt = f"""Instructions:
             - You are a helpful assistant that receives chunks from a candidate's CV (extracted using a fixed number of words) and returns a subset of the chunk with full meaning and context.
             - Do not modify the words int the input chunk.
-            - Anonymize the data by changing only the person's name and surname to 'the candidate'.
             - Use the topic of the previous chunk to determine the scope of the new chunk. - Previous topic: '{topic}'
             - Use the following format to return the text: {{'chunk': 'the chunk', 'topic': 'a topic for the chunk different from the previous one'}}"""
             chat_completion = self.client.chat.completions.create(
