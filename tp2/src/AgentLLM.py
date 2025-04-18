@@ -26,7 +26,8 @@ class AgentLLM:
         Returns:
             str: A greeting message from the agent.
         """
-        return "Hello, I am a principal LLM agent. I can answer questions about multiple candidates CVs, based on the answers retrieved from different CV agents."
+        return ("Hello, I am a principal LLM agent. I can answer questions about multiple candidates CVs,"
+                " based on the answers retrieved from different CV agents.")
 
     def answer(self, question: str, context: {}):
         """
@@ -57,4 +58,4 @@ class AgentLLM:
             ],
             model="llama-3.3-70b-versatile",
         )
-        return f"{{'agent':'LLM', 'content':'{chat_completion.choices[0].message.content}'}}"
+        return chat_completion.choices[0].message.content

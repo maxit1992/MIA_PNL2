@@ -13,17 +13,15 @@ class AgentState(TypedDict):
     agents: list[str]
     agents_prompt: str
     next_agent: str
-    messages: list[str]
+    context: list[dict[str, str]]
     answer: str
+    chat_history: list[dict[str, str]]
 
 
 class AgentEnvironment:
 
-    def __init__(self):
+    def __init__(self, cv_agent1_file, cv_agent2_file, cv_agent3_file):
         # Input data
-        cv_agent1_file = "resources/Maxi Torti.pdf"
-        cv_agent2_file = "resources/Yann LeCun.pdf"
-        cv_agent3_file = "resources/Andrew Ng.pdf"
         self.cv_agents_details = []
         self.cv_agents_details.append({'name': Path(cv_agent1_file).stem, 'file': cv_agent1_file})
         self.cv_agents_details.append({'name': Path(cv_agent2_file).stem, 'file': cv_agent2_file})
@@ -38,7 +36,7 @@ class AgentEnvironment:
 
         # Initialize the state graph
         graph = StateGraph(AgentState)
-        graph.add_node("coordinator", self.get_required_agents)
+        graph.add_node("coordinator", self.init_and_get_required_agents)
         graph.add_node("selector", self.get_next_agent)
         graph.add_node(self.cv_agents_details[0]['name'], self.get_context_cv_agent1)
         graph.add_node(self.cv_agents_details[1]['name'], self.get_context_cv_agent2)
@@ -53,61 +51,84 @@ class AgentEnvironment:
         graph.set_entry_point("coordinator")
         self.graph = graph.compile()
 
-    def get_required_agents(self, state: AgentState):
-        print(self.coordinator.greetings())
-        user_question = state['question']
-        coordinator_answer = self.coordinator.answer(user_question,
-                                                     [cv_agent['name'] for cv_agent in self.cv_agents_details])
-        print(f"coordinator - {coordinator_answer}")
-        return coordinator_answer
+    def init_and_get_required_agents(self, state: AgentState):
+        greetings = {"role": "coordinator", "content": self.coordinator.greetings()}
+        print(greetings)
+        chat_history = [greetings]
+        agents, prompt = self.coordinator.answer(state['question'],
+                                                 [cv_agent['name'] for cv_agent in self.cv_agents_details])
+        agent_answer = {"role": "coordinator",
+                        "content": f"We need to ask the agents: {agents} about the question: {prompt}"}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        return {'agents': agents, 'agents_prompt': prompt, 'context': [], 'chat_history': chat_history}
 
     def get_next_agent(self, state: AgentState):
-        print("Hello I am the selector agent. I decide which CV agent should be asked next.")
+        greetings = {"role": "selector", "content": "Hello I am the selector agent."
+                                                    " I decide which CV agent should be asked next."}
+        print(greetings)
+        chat_history = state['chat_history']
+        chat_history.append(greetings)
         agents = state['agents']
         if len(agents) > 0:
             next_agent = agents.pop(0)
         else:
             next_agent = "llm"
-        print(f"next_agent - {next_agent}")
-        return {"agents": agents, "next_agent": next_agent}
+        agent_answer = {"role": "selector", "content": f"Next agent is {next_agent}"}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        return {"agents": agents, "next_agent": next_agent, 'chat_history': chat_history}
 
     def select_agent(self, state: AgentState):
         return state['next_agent']
 
     def get_context_cv_agent1(self, state: AgentState):
-        print(self.cv_agent1.greetings())
+        greetings = {"role": "agent1", "content": self.cv_agent1.greetings()}
+        print(greetings)
+        chat_history = state['chat_history']
+        chat_history.append(greetings)
         answer = self.cv_agent1.answer(state['agents_prompt'])
-        print(f"cv_agent_1 - {answer}")
-        messages = state['messages'] if 'messages' in state else []
-        messages.append(answer)
-        return {"messages": messages}
+        agent_answer = {"role": "agent1", "content": answer}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        context = state['context']
+        context.append({'candidate': self.cv_agents_details[0]['name'], 'context': answer})
+        return {"context": context, "chat_history": chat_history}
 
     def get_context_cv_agent2(self, state: AgentState):
-        print(self.cv_agent2.greetings())
+        greetings = {"role": "agent2", "content": self.cv_agent2.greetings()}
+        print(greetings)
+        chat_history = state['chat_history']
+        chat_history.append(greetings)
         answer = self.cv_agent2.answer(state['agents_prompt'])
-        print(f"cv_agent_2 - {answer}")
-        messages = state['messages'] if 'messages' in state else []
-        messages.append(answer)
-        return {"messages": messages}
+        agent_answer = {"role": "agent2", "content": answer}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        context = state['context']
+        context.append({'candidate': self.cv_agents_details[1]['name'], 'context': answer})
+        return {"context": context, "chat_history": chat_history}
 
     def get_context_cv_agent3(self, state: AgentState):
-        print(self.cv_agent3.greetings())
+        greetings = {"role": "agent3", "content": self.cv_agent3.greetings()}
+        print(greetings)
+        chat_history = state['chat_history']
+        chat_history.append(greetings)
         answer = self.cv_agent3.answer(state['agents_prompt'])
-        print(f"cv_agent_3 - {answer}")
-        messages = state['messages'] if 'messages' in state else []
-        messages.append(answer)
-        return {"messages": messages}
+        agent_answer = {"role": "agent3", "content": answer}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        context = state['context']
+        context.append({'candidate': self.cv_agents_details[2]['name'], 'context': answer})
+        return {"context": context, "chat_history": chat_history}
 
     def answer_question(self, state: AgentState):
-        print(self.llm.greetings())
-        context = state['messages'] if 'messages' in state else []
+        greetings = {"role": "llm", "content": self.cv_agent2.greetings()}
+        print(greetings)
+        chat_history = state['chat_history']
+        chat_history.append(greetings)
+        context = state['context']
         answer = self.llm.answer(state['question'], context)
-        print(f"llm - {answer}")
-        return {"answer": answer}
-
-
-abot = AgentEnvironment()
-question = "Who has more experience in AI, Maxi Torti or Yann LeCun?"
-question = "Who is older among all candidates?"
-result = abot.graph.invoke({"question": question})
-print(f"result = {result}")
+        agent_answer = {"role": "llm", "content": answer}
+        print(agent_answer)
+        chat_history.append(agent_answer)
+        return {"answer": answer, "chat_history": chat_history}

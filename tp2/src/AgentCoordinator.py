@@ -29,7 +29,8 @@ class AgentCoordinator:
         Returns:
             str: A greeting message from the agent.
         """
-        return "Hello, I am a Coordinator agent. I decide which CVs should information be retrieved from to answer the user question."
+        return ("Hello, I am a Coordinator agent."
+                " I decide which CVs should information be retrieved from to answer the user question.")
 
     def answer(self, question: str, agents: [str]):
         """
@@ -62,8 +63,8 @@ class AgentCoordinator:
             if 'agents' in result and 'agents_prompt' in result:
                 detected_agents = result.get('agents')
                 agents_prompt = result.get('agents_prompt')
-                return {'agents': detected_agents, 'agents_prompt': agents_prompt}
+                return detected_agents, agents_prompt
             else:
                 raise ValueError("Invalid response format")
         except (Exception,):
-            return {'agents': [agents[0]], 'agents_prompt': question}
+            return [agents[0]], question

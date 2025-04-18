@@ -23,7 +23,7 @@ class AgentCV:
         self.agent_name = agent_name
         self.vector_db = VectorDB(index_name=agent_name.lower().replace(' ', '-'))
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-        #self.save_cv(cv_file)
+        # self.save_cv(cv_file)
 
     def save_cv(self, cv_file: str):
         """
@@ -76,4 +76,4 @@ class AgentCV:
             ],
             model="llama-3.3-70b-versatile",
         )
-        return f"{{'agent':'{self.agent_name}', 'content':'{chat_completion.choices[0].message.content}'}}"
+        return chat_completion.choices[0].message.content
