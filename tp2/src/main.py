@@ -24,6 +24,7 @@ if "uploader_key" not in st.session_state:
 
 question = st.chat_input("Ask a question:")
 
+# Upload each CV
 if "cv1_file" not in st.session_state:
     uploaded_cv = st.file_uploader("Upload CV1", type=["pdf"], key=st.session_state["uploader_key"])
     if uploaded_cv:
@@ -64,6 +65,7 @@ elif "cv3_file" not in st.session_state:
             st.markdown(message)
         st.rerun()
 elif "abot" not in st.session_state:
+    # After CV upload, init agents environment
     st.session_state["abot"] = AgentEnvironment(st.session_state["cv1_file"],
                                                 st.session_state["cv2_file"],
                                                 st.session_state["cv3_file"])
@@ -72,15 +74,12 @@ elif "abot" not in st.session_state:
     os.remove(st.session_state["cv3_file"])
 else:
     if question:
-        # Save the question
+        # Answer questions
         st.session_state['messages'].append({"role": "user", "content": question})
         with st.chat_message("user"):
             st.markdown(question)
-
-        # Answer the question
         abot = st.session_state["abot"]
         answer = abot.graph.invoke({"question": question})
-
         for message in answer['chat_history']:
             st.session_state['messages'].append(message)
             with st.chat_message(message['role']):

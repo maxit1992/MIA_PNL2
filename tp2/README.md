@@ -2,7 +2,8 @@
 
 ## Description
 
-In this TP, students are required to create an agents system that can answer questions about multiple candidates based on their CV.
+In this TP, students are required to create an agents system that can answer questions about multiple candidates based
+on their CV.
 
 ## Requirements
 
@@ -33,11 +34,13 @@ To start the CV Chat Bot application, run the following command:
 streamlit run src/main.py
 ```
 
-This will launch the Streamlit app in your default web browser.
+This will launch the Streamlit app in your default web browser. Then you have to upload 3 CVs, one for each CV agent.
+Once uploaded, you can ask questions about the CVs, and the system will provide answers.
+If the question does not mention the person's name, the system will answer based on the first CV.
 
 ## Features
 
-- Upload up to three CVs in PDF format.
+- Upload three CVs in PDF format.
 - Automatically process and store CV data in a vector database for contextual search.
 - Ask questions about the uploaded CVs, and the system will provide accurate and concise answers.
 - Uses agents orchestration to handle the question-answering process.

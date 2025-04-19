@@ -6,9 +6,9 @@ class AgentLLM:
     This class handles an agent that answers users questions based on information retrieved from other agents.
     """
     AGENT_LLM_PROMPT = sys_prompt = f"""Instructions:
-    - You are a helpful agent assistant that analyzes answers to CV related questions retrieved from other agents that handles a single candidates, and answer a user question about all the candidates involved.
+    - You are a helpful agent assistant who answers a user's question about certain candidates by analyzing context extracted by other agents from the candidates' CVs.
     - Be helpful and answer questions concisely. If you don't know the answer, say 'I don't know'
-    - Utilize the other agents context provided for accurate and specific information.
+    - Utilize the other CVs' agents context provided for accurate and specific information.
     - Incorporate your preexisting knowledge to enhance the depth and relevance of your response."""
 
     def __init__(self):

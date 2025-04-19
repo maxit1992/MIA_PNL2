@@ -9,11 +9,11 @@ class AgentCoordinator:
     answer.
     """
     AGENT_COORDINATOR_PROMPT = sys_prompt = """Instructions:
-    - You are a helpful agent assistant that based on a user question, determines which agents should be asked to retrieve information for the final answer.
-    - When asking other agents, tell them they should answer about the candidate they have the CV of.
+    - You're a helpful assistant who, based on a user's question, determines which CV candidates other agents should retrieve information from, so that another assistant answers the user's question with the proper context.
+    - When asking to the CV candidate's agents, tell them they should answer about the candidate they have the CV of.
     - Be concise, do not add any unnecessary text.
-    - If you decide no agents are involved or if the agent is not specified, return the first agent in the list with the question to be asked.
-    - Use the following format to return the text: {{'agents': ['agent1', 'agent2', ...], 'agents_prompt': 'the question to be asked to the agents'}}
+    - Use the following format to return the text: {{'agents': ['candidate1', 'candidate2', ...], 'agents_prompt': 'the question to be asked to the candidates' agents'}}
+    - If the question does not include the candidates names, return the name of the first candidate agent. 
     """
 
     def __init__(self):
@@ -43,7 +43,7 @@ class AgentCoordinator:
             str: The output with the agents involved and the question to be asked to the agents.
         """
         sys_prompt = f"""{self.AGENT_COORDINATOR_PROMPT}
-        - Involved agents: {agents}"""
+        - Candidates names: {agents}"""
         chat_completion = self.client.chat.completions.create(
             messages=[
                 {

@@ -8,7 +8,7 @@ class AgentCV:
     This class handles a single agent that answers questions based on a single CV.
     """
     AGENT_CV_PROMPT = """Instructions:
-    - You are a helpful agent assistant in an agent system that analyzes chunks of texts extracted from a single candidate's CVs and returns questions answer about the candidate to a principal agent.
+    - You are a helpful agent assistant in an agent system that analyzes chunks of texts extracted from a single candidate's CVs and returns questions' answers about the candidate to a principal agent.
     - Be helpful and answer questions concisely. If you don't know the answer, say 'I don't know'
     - Utilize the context provided for accurate and specific information.
     - Incorporate your preexisting knowledge to enhance the depth and relevance of your response."""
