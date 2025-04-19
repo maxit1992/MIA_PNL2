@@ -1,8 +1,8 @@
 import ast
-import os
 
 import pymupdf
-from groq import Groq
+
+from SingletonGroq import SingletonGroq
 
 
 class TextProvider:
@@ -18,7 +18,7 @@ class TextProvider:
             file (str): The path to the file to be processed.
         """
         self.file = file
-        self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        self.client = SingletonGroq().groq
 
     def get_text(self) -> str:
         """

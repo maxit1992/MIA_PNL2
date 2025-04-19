@@ -1,7 +1,4 @@
-import os
-
-from groq import Groq
-
+from SingletonGroq import SingletonGroq
 from TextProvider import TextProvider
 from VectorDB import VectorDB
 
@@ -18,14 +15,18 @@ class AgentCV:
 
     def __init__(self, agent_name: str, cv_file: str):
         """
-        Initializes the Chat class by setting up the Groq client with the API key.
+        Initializes the AgentCV class by setting up the Groq client and saving the CV file to the vector database.
+
+        Args:
+            agent_name (str): the candidate's name.
+            cv_file (str): the path to the candidate's CV file.
         """
         self.agent_name = agent_name
         self.vector_db = VectorDB(index_name=agent_name.lower().replace(' ', '-'))
-        self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-        # self.save_cv(cv_file)
+        self.client = SingletonGroq().groq
+        self._save_cv(cv_file)
 
-    def save_cv(self, cv_file: str):
+    def _save_cv(self, cv_file: str):
         """
         Saves the CV file to the vector database.
 
@@ -47,16 +48,14 @@ class AgentCV:
 
     def answer(self, question: str):
         """
-        Generates an answer to a user's question based on the provided context.
+        Generates an answer to a question based on the provided CV context.
 
         Args:
-            question (str): The user's question to be answered.
-            context (dict): A dictionary containing context information, typically a list of matches with metadata.
+            question (str): The question to be answered.
 
         Returns:
             str: The generated answer to the question.
         """
-        # Assuming the context is a list of dictionaries with 'text' key
         context = self.vector_db.get_similar_text(question, top_k=3)
         clean_context = '\n'.join(item['metadata']['text'] for item in context['matches'])
         sys_prompt = f"""{self.AGENT_CV_PROMPT}

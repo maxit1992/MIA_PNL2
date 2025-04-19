@@ -1,7 +1,7 @@
 """
-This script implements a Streamlit-based CV Chat Bot application. The application allows users to upload CVs, process
-them to extract chunks of text, store the chunks in a vector database, and interact with the bot to ask questions about
-the uploaded CVs.
+This script implements a Streamlit-based CV agent bot application. The application allows users to upload up to 3 CVs,
+process them to extract chunks of text, store the chunks in a vector database, and interact with agent bots that
+coordinate themselves to answer questions about the uploaded CVs.
 """
 
 import os
@@ -21,6 +21,8 @@ for message in st.session_state['messages']:
 
 if "uploader_key" not in st.session_state:
     st.session_state["uploader_key"] = 1
+
+question = st.chat_input("Ask a question:")
 
 if "cv1_file" not in st.session_state:
     uploaded_cv = st.file_uploader("Upload CV1", type=["pdf"], key=st.session_state["uploader_key"])
@@ -69,7 +71,6 @@ elif "abot" not in st.session_state:
     os.remove(st.session_state["cv2_file"])
     os.remove(st.session_state["cv3_file"])
 else:
-    question = st.chat_input("Ask a question:")
     if question:
         # Save the question
         st.session_state['messages'].append({"role": "user", "content": question})

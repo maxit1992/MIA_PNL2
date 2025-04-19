@@ -1,26 +1,26 @@
 import ast
-import os
 
-from groq import Groq
+from SingletonGroq import SingletonGroq
 
 
 class AgentCoordinator:
     """
-    This class handles a single agent that decides which agents should be asked to retrieve information for the final answer.
+    This class handles a single agent that decides which agents should be asked to retrieve information for the final
+    answer.
     """
-    AGENT_COORDINATOR_PROMPT = sys_prompt = f"""Instructions:
+    AGENT_COORDINATOR_PROMPT = sys_prompt = """Instructions:
     - You are a helpful agent assistant that based on a user question, determines which agents should be asked to retrieve information for the final answer.
     - When asking other agents, tell them they should answer about the candidate they have the CV of.
     - Be concise, do not add any unnecessary text.
-    - If you decide no agents are involved, return the first agent in the list with the question to be asked.
+    - If you decide no agents are involved or if the agent is not specified, return the first agent in the list with the question to be asked.
     - Use the following format to return the text: {{'agents': ['agent1', 'agent2', ...], 'agents_prompt': 'the question to be asked to the agents'}}
     """
 
     def __init__(self):
         """
-        Initializes the LLM class by setting up the Groq client with the API key.
+        Initialize the class required services.
         """
-        self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        self.client = SingletonGroq().groq
 
     def greetings(self):
         """
@@ -42,7 +42,6 @@ class AgentCoordinator:
         Returns:
             str: The output with the agents involved and the question to be asked to the agents.
         """
-        # Assuming the context is a list of dictionaries with 'text' key
         sys_prompt = f"""{self.AGENT_COORDINATOR_PROMPT}
         - Involved agents: {agents}"""
         chat_completion = self.client.chat.completions.create(

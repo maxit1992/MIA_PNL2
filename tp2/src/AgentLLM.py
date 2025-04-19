@@ -1,11 +1,9 @@
-import os
-
-from groq import Groq
+from SingletonGroq import SingletonGroq
 
 
 class AgentLLM:
     """
-    This class handles a single agent that answers questions based on a single CV.
+    This class handles an agent that answers users questions based on information retrieved from other agents.
     """
     AGENT_LLM_PROMPT = sys_prompt = f"""Instructions:
     - You are a helpful agent assistant that analyzes answers to CV related questions retrieved from other agents that handles a single candidates, and answer a user question about all the candidates involved.
@@ -15,9 +13,9 @@ class AgentLLM:
 
     def __init__(self):
         """
-        Initializes the Chat class by setting up the Groq client with the API key.
+        Initialize the class required services.
         """
-        self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        self.client = SingletonGroq().groq
 
     def greetings(self):
         """
@@ -35,12 +33,11 @@ class AgentLLM:
 
         Args:
             question (str): The user's question to be answered.
-            context (dict): A dictionary containing context information, typically a list of matches with metadata.
+            context (dict): A dictionary containing context information.
 
         Returns:
             str: The generated answer to the question.
         """
-        # Assuming the context is a list of dictionaries with 'text' key
         sys_prompt = f"""{self.AGENT_LLM_PROMPT}
                 
         Context: 

@@ -1,7 +1,6 @@
-import os
+from pinecone import ServerlessSpec
 
-from pinecone import Pinecone, ServerlessSpec
-from transformers import AutoModel
+from SingletonPinecone import SingletonPinecone
 
 
 class VectorDB:
@@ -9,15 +8,15 @@ class VectorDB:
     This class manages a vector database for storing and retrieving text.
     """
 
-    def __init__(self, index_name: str, model_name: str = 'jinaai/jina-embeddings-v2-small-en'):
+    def __init__(self, index_name: str):
         """
-        Initializes the VectorDB with a specified transformer model and Pinecone client.
+        Initializes the VectorDB for a specific index with the transformer model and Pinecone client.
 
         Args:
-            model_name (str): The name of the transformer model to use for embeddings.
+            index_name (str): The index for the vector database.
         """
-        self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
-        self.pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+        self.model = SingletonPinecone().model
+        self.pc = SingletonPinecone().pc
         self.index_name = index_name
 
     def get_embeddings(self, text: list[str]):

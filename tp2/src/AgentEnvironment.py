@@ -122,7 +122,7 @@ class AgentEnvironment:
         return {"context": context, "chat_history": chat_history}
 
     def answer_question(self, state: AgentState):
-        greetings = {"role": "llm", "content": self.cv_agent2.greetings()}
+        greetings = {"role": "llm", "content": self.llm.greetings()}
         print(greetings)
         chat_history = state['chat_history']
         chat_history.append(greetings)
