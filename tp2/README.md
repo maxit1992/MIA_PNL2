@@ -17,7 +17,7 @@ on their CV.
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/maxit1992/MIA_RL1.git
+    git clone https://github.com/maxit1992/MIA_PNL2.git
     cd MIA_PNL2/tp2
     ```
 
