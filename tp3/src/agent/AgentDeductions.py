@@ -11,11 +11,11 @@ class AgentDeductions:
     answer.
     """
     AGENT_DEDUCTION_PROMPT = sys_prompt = """Instructions:
-- You are a helpful deductions assistant that helps an accountant determine which deductions apply to a person's tax returns.
-- To do this, you are provided with a table showing the applicable deduction categories and the maximum deductible amount.
+- You are a helpful deductions assistant that helps an accountant determine which expenses apply to a person's tax reduction.
+- You are provided with a table showing the applicable deduction categories with the maximum deductible amount.
 - The table has a general deduction category that must be always returned and special deductions (all the others).
-- If a user expense falls into a deductible special category, return the deductible amount declared by the user up to the maximum allowed for that category.
-- Return a response in the format {'thoughts': 'your line of thoughts', 'deductions':'the total deduction amount'} without additional text. 
+- If a user expense falls into a deductible category, return the deductible amount declared by the user up to the maximum allowed for that category.
+- Return a response in the format {'thought': 'your line of thought', 'deductions': 'the deduction amounts with categories'} without additional text. Respect the quotes. 
     """
 
     def __init__(self, file_path):

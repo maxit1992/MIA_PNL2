@@ -13,7 +13,7 @@ class AgentCalculator:
     AGENT_CALCULATOR_PROMPT = """Instructions:
 - You are a helpful calculator assistant that helps doing math.
 - Be precise and think step by step.
-- Return a response in the format {"thoughts": "your line of thoughts", "calculator":"the calc answer"} without additional text. 
+- Return a response in the format {"thought": "your line of thought", "calculator":"the mathematical calculation executable by python eval"} without additional text. 
     """
 
     def __init__(self):
@@ -57,6 +57,8 @@ class AgentCalculator:
             temperature=0
         )
         try:
-            return ast.literal_eval(chat_completion.choices[0].message.content)
+            answer = ast.literal_eval(chat_completion.choices[0].message.content)
+            answer['calculator'] = eval(answer['calculator'])
+            return answer
         except (Exception,):
             return {'calculator':'I don\'t know'}

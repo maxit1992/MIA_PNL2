@@ -78,8 +78,9 @@ class AgentEnvironment:
             final_answer = accountant_answer['answer']
         else:
             next_agent = "END"
-            final_answer = "I don't know"
-        return {'next_agent': next_agent, 'agent_prompt': agent_prompt, 'answer': final_answer, 'chat_history': chat_history}
+            final_answer = accountant_answer
+        return {'next_agent': next_agent, 'agent_prompt': agent_prompt, 'answer': final_answer,
+                'chat_history': chat_history}
 
     def _select_agent(self, state: AgentState):
         """
@@ -116,5 +117,6 @@ class AgentEnvironment:
 
 
 abot = AgentEnvironment()
-question= "How much do I have to pay in taxes next month? My deductions are: house=$1000, expenses=$5000, fridge=$2000. My month income is $1000"
+question = ("How much do I have to pay in taxes for next june? My income is $3000000, I have paid car=$50000000, house "
+            "rental=$20000000, fridge=100000 and books=50000. I have already paid $200000 in taxes.")
 answer = abot.graph.invoke({"question": question})
