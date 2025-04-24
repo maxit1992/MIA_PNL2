@@ -1,8 +1,7 @@
 import ast
-
 import csv
 
-from src.client.SingletonGroq import SingletonGroq
+from .client.SingletonGroq import SingletonGroq
 
 
 class AgentDeductions:
@@ -11,11 +10,12 @@ class AgentDeductions:
     answer.
     """
     AGENT_DEDUCTION_PROMPT = sys_prompt = """Instructions:
-- You are a helpful deductions assistant that helps an accountant determine which expenses apply to a person's tax reduction.
-- You are provided with a table showing the applicable deduction categories with the maximum deductible amount.
-- The table has a general deduction category that must be always returned and special deductions (all the others).
-- If a user expense falls into a deductible category, return the deductible amount declared by the user up to the maximum allowed for that category.
-- Return a response in the format {'thought': 'your line of thought', 'deductions': 'the deduction amounts with categories'} without additional text. Respect the quotes. 
+- You are a helpful deductions assistant. You determine which users expenses apply to a tax reduction.
+- Use the provided table that shows the applicable deduction categories with the maximum deductible amount.
+- Always apply the general deduction category.
+- If a user expense falls into a deductible category, apply the deductible amount declared by the user up to the maximum allowed for that category.
+- Think step by step
+- Return a response in the format {'thought': 'your line of thought', 'deductions': 'the deduction amounts with categories'} without additional text. 
     """
 
     def __init__(self, file_path):
@@ -24,16 +24,6 @@ class AgentDeductions:
         """
         self.client = SingletonGroq().groq
         self.deductions_data = self.read_csv(file_path)
-
-    def greetings(self):
-        """
-        Returns a greeting message from the agent.
-
-        Returns:
-            str: A greeting message from the agent.
-        """
-        return ("Hello, I am a Coordinator agent."
-                " I decide which CVs should information be retrieved from to answer the user question.")
 
     @staticmethod
     def read_csv(file_path):
@@ -47,13 +37,13 @@ class AgentDeductions:
             list: A list of dictionaries where each dictionary represents a row in the CSV file.
         """
         data = []
-        with open(file_path, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
+        with open(file_path, mode='r', encoding='utf-8-sig') as file:
+            reader = csv.reader(file, delimiter=';')
             for row in reader:
                 data.append(row)
         return data
 
-    def answer(self, question: str) -> dict[str, str]:
+    def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
         Decides which agents are involved in the user question and the question to be asked to the agents.
 
@@ -65,7 +55,7 @@ class AgentDeductions:
         """
         sys_prompt = f"""{self.AGENT_DEDUCTION_PROMPT}
 
-        Context: 
+        Deductions data:
         {self.deductions_data}"""
         chat_completion = self.client.chat.completions.create(
             messages=[
@@ -82,6 +72,8 @@ class AgentDeductions:
             temperature=0
         )
         try:
-            return ast.literal_eval(chat_completion.choices[0].message.content)
+            usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)
+            answer = ast.literal_eval(chat_completion.choices[0].message.content)
+            return answer, usage_tokens
         except (Exception,):
-            return {'deductions':'I don\'t know'}
+            return {"deductions": "I don\'t know"}, (0, 0)

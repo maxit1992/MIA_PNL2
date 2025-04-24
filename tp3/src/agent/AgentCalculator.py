@@ -1,8 +1,6 @@
 import ast
 
-import csv
-
-from src.client.SingletonGroq import SingletonGroq
+from .client.SingletonGroq import SingletonGroq
 
 
 class AgentCalculator:
@@ -11,8 +9,8 @@ class AgentCalculator:
     answer.
     """
     AGENT_CALCULATOR_PROMPT = """Instructions:
-- You are a helpful calculator assistant that helps doing math.
-- Be precise and think step by step.
+- You are a helpful calculator. You execute math.
+- Think step by step.
 - Return a response in the format {"thought": "your line of thought", "calculator":"the mathematical calculation executable by python eval"} without additional text. 
     """
 
@@ -22,17 +20,7 @@ class AgentCalculator:
         """
         self.client = SingletonGroq().groq
 
-    def greetings(self):
-        """
-        Returns a greeting message from the agent.
-
-        Returns:
-            str: A greeting message from the agent.
-        """
-        return ("Hello, I am a Coordinator agent."
-                " I decide which CVs should information be retrieved from to answer the user question.")
-
-    def answer(self, question: str) -> dict[str, str]:
+    def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
         Decides which agents are involved in the user question and the question to be asked to the agents.
 
@@ -57,8 +45,9 @@ class AgentCalculator:
             temperature=0
         )
         try:
+            usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)
             answer = ast.literal_eval(chat_completion.choices[0].message.content)
             answer['calculator'] = eval(answer['calculator'])
-            return answer
+            return answer, usage_tokens
         except (Exception,):
-            return {'calculator':'I don\'t know'}
+            return {'calculator': 'I don\'t know'}, (0, 0)

@@ -1,6 +1,6 @@
 import ast
 
-from src.client.SingletonGroq import SingletonGroq
+from .client.SingletonGroq import SingletonGroq
 
 
 class AgentAccountant:
@@ -9,16 +9,23 @@ class AgentAccountant:
     answer.
     """
     AGENT_ACCOUNTANT_PROMPT = sys_prompt = """Instructions:
-- You're a helpful accountant assistant which helps the user calculate how much they have to pay to the treasury in income tax in a fiscal year.
-- The fiscal year runs from January to December.
-- The tax is annual, but it's paid monthly. You have to calculate the annual income projection, deduct the deductions provided by the user, apply a base amount and an excedent tax percentage, and then project the resulting balance to the following month's accumulated balance. From this projection, subtract the amount already paid in the previous month to obtain the amount due for the following month.
-- The user must provide their monthly income, potentially deductible expenses, the month to pay, and how much tax they have already paid. If any data is missing, return {'answer':'instructions for the user input'} without additional text.
-- To accomplish this task, you have the help of three agents. The "deductions" agent gives you the actual applicable amounts to deduct based on the user's declaration. The "calculator" agent helps you do math. And the "percentage" agent helps you calculate the tax base value, the minimum and the percentage over the minimum to apply based on the annual projection.
-- To contact the "deductions" agent, return a response in the format {'thought': 'your line of thought', 'deductions':'the deductions entered by the user with the category'} without additional text.
-- To contact the "calculator" agent, return a response in the format {'thought': 'your line of thought', 'calculator':'the calculation you need to solve'} without additional text.
-- To contact the "percentage" agent, return a response in the format {'thought': 'your line of thought', 'percentage':'the annual projection after the deductions'} without additional text.
-- Let's think step by step, asking other agents, consuming their answers and continuing with the calculation.
-- Whenever you have the answer, return a response in the format {'thought': 'your line of thought', 'answer':'the tax amount to be paid next month'} without additional text. 
+- You are a helpful accountant assistant, you helps the user calculating the tax amount to pay next month.
+- Tax is annual, but paid monthly. The fiscal year runs from January to December.
+- There are X steps to calculate the amount:
+1- Project the monthly income to a year gross taxable amount.
+2- Get the applicable deductions.
+3- Apply the deductions to get the net taxable amount. If deductions are greater than the gross taxable amount, no tax has to be paid.
+4- Get the fixed amount, the surplus base and the percentage over the surplus for the taxable amount.
+6- Calculate the annual tax to be paid.
+5- Proportionate the annual tax to the accumulated monthly tax.
+6- Subtract the amount already paid from the the accumulated monthly tax and end the calculation here, returning the value.
+- You have the help of three agents. The 'deductions' agent calculates the total deduction from the user's declaration. The 'calculator' agent do math. The 'percentage' agent return the applicable tax fixed amount and percentage over the surplus.
+- To contact the 'deductions' agent, return a response in the format {'thought': 'your line of thought', 'deductions':'the deductions entered by the user with the category'}.
+- To contact the 'calculator' agent, return a response in the format {'thought': 'your line of thought', 'calculator':'the calculation you need to solve'}
+- To contact the 'percentage' agent, return a response in the format {'thought': 'your line of thought', 'percentage':'the annual projection after the deductions'}.
+- For the final answer, return a response in the format {'thought': 'your line of thought', 'answer':'the tax amount to be paid next month'}.
+- Think step by step.
+- Be concise, don't add extra information. 
     """
 
     def __init__(self):
@@ -27,17 +34,7 @@ class AgentAccountant:
         """
         self.client = SingletonGroq().groq
 
-    def greetings(self):
-        """
-        Returns a greeting message from the agent.
-
-        Returns:
-            str: A greeting message from the agent.
-        """
-        return ("Hello, I am a Coordinator agent."
-                " I decide which CVs should information be retrieved from to answer the user question.")
-
-    def answer(self, question: str, chat_history: list = None) -> dict[str, str]:
+    def answer(self, question: str, reasoning: list = None) -> tuple[dict[str, str], tuple[int, int]]:
         """
         Decides which agents are involved in the user question and the question to be asked to the agents.
 
@@ -49,8 +46,8 @@ class AgentAccountant:
         """
         messages = [{"role": "system", "content": self.AGENT_ACCOUNTANT_PROMPT},
                     {"role": "user", "content": question}]
-        if chat_history:
-            messages.extend(chat_history)
+        if reasoning:
+            messages.extend(reasoning)
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model="llama-3.3-70b-versatile",
@@ -58,6 +55,8 @@ class AgentAccountant:
             temperature=0
         )
         try:
-            return ast.literal_eval(chat_completion.choices[0].message.content)
+            usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)
+            answer = ast.literal_eval(chat_completion.choices[0].message.content)
+            return answer, usage_tokens
         except (Exception,):
-            return {}
+            return {'answer': 'I don\'t know'}, (0, 0)

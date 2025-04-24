@@ -1,8 +1,7 @@
 import ast
-
 import csv
 
-from src.client.SingletonGroq import SingletonGroq
+from .client.SingletonGroq import SingletonGroq
 
 
 class AgentPercentage:
@@ -11,8 +10,9 @@ class AgentPercentage:
     answer.
     """
     AGENT_PERCENTAGE_PROMPT = sys_prompt = """Instructions:
-- You are a helpful assistant who receives total taxable income and reviews a table to return the taxable base and the percentage of the excess over the applicable minimum.
-- Return a response in the format {'percentage':'the applicable base, the minimum and the percentage'} without additional text. 
+- You are a helpful assistant. You receive a total taxable income and return a fixed tax amount and a percentage of the surplus.
+- Use the provided table to get the values.
+- Return a response in the format {'percentage':'the fixed amount, the base surplus and the surplus percentage'} without additional text. 
     """
 
     def __init__(self, file_path):
@@ -21,16 +21,6 @@ class AgentPercentage:
         """
         self.client = SingletonGroq().groq
         self.tax_data = self.read_csv(file_path)
-
-    def greetings(self):
-        """
-        Returns a greeting message from the agent.
-
-        Returns:
-            str: A greeting message from the agent.
-        """
-        return ("Hello, I am a Coordinator agent."
-                " I decide which CVs should information be retrieved from to answer the user question.")
 
     @staticmethod
     def read_csv(file_path):
@@ -44,13 +34,13 @@ class AgentPercentage:
             list: A list of dictionaries where each dictionary represents a row in the CSV file.
         """
         data = []
-        with open(file_path, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
+        with open(file_path, mode='r', encoding='utf-8-sig') as file:
+            reader = csv.reader(file, delimiter=';')
             for row in reader:
                 data.append(row)
         return data
 
-    def answer(self, question: str) -> dict[str, str]:
+    def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
         Decides which agents are involved in the user question and the question to be asked to the agents.
 
@@ -62,7 +52,7 @@ class AgentPercentage:
         """
         sys_prompt = f"""{self.AGENT_PERCENTAGE_PROMPT}
 
-        Context: 
+        Tax data:
         {self.tax_data}"""
         chat_completion = self.client.chat.completions.create(
             messages=[
@@ -79,6 +69,8 @@ class AgentPercentage:
             temperature=0
         )
         try:
-            return ast.literal_eval(chat_completion.choices[0].message.content)
+            usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)
+            answer = ast.literal_eval(chat_completion.choices[0].message.content)
+            return answer, usage_tokens
         except (Exception,):
-            return {'percentage':'I don\'t know'}
+            return {'percentage': 'I don\'t know'}, (0, 0)

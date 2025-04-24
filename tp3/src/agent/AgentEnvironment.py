@@ -1,19 +1,24 @@
 from typing import TypedDict
 
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, END
 
-from AgentAccountant import AgentAccountant
-from AgentCalculator import AgentCalculator
-from AgentDeductions import AgentDeductions
-from AgentPercentage import AgentPercentage
+from .AgentAccountant import AgentAccountant
+from .AgentCalculator import AgentCalculator
+from .AgentDeductions import AgentDeductions
+from .AgentPercentage import AgentPercentage
 
 
 class AgentState(TypedDict):
     question: str
+    reasoning: list[dict[str, str]]
     chat_history: list[dict[str, str]]
     answer: str
     next_agent: str
     agent_prompt: str
+    token_usage_history: list[tuple[int, int]]
+    input_tokens: int
+    reasoning_tokens: int
+    output_tokens: int
 
 
 class AgentEnvironment:
@@ -38,10 +43,12 @@ class AgentEnvironment:
         graph.add_node("calculator", self.process_calculator)
         graph.add_node("deductions", self.process_deductions)
         graph.add_node("percentage", self.process_percentage)
+        graph.add_node("pricer", self.pricer)
         graph.add_conditional_edges("accountant", self._select_agent)
         graph.add_edge("calculator", "accountant")
         graph.add_edge("deductions", "accountant")
         graph.add_edge("percentage", "accountant")
+        graph.add_edge("pricer", END)
         graph.set_entry_point("accountant")
         self.graph = graph.compile()
 
@@ -55,13 +62,23 @@ class AgentEnvironment:
         Returns:
             dict: Updated state with the required agents, their prompt, and chat history.
         """
+        if 'reasoning' in state:
+            reasoning = state['reasoning']
+        else:
+            reasoning = []
         if 'chat_history' in state:
             chat_history = state['chat_history']
         else:
             chat_history = []
-        accountant_answer = self.accountant.answer(state['question'], chat_history)
+        if 'token_usage_history' in state:
+            token_usage_history = state['token_usage_history']
+        else:
+            token_usage_history = []
+        accountant_answer, token_usage = self.accountant.answer(state['question'], reasoning)
+        token_usage_history.append(token_usage)
         print(accountant_answer)
-        chat_history.append({"role": "assistant", "content": str(accountant_answer)})
+        reasoning.append({"role": "assistant", "content": str(accountant_answer)})
+        chat_history.append({"role": "accountant", "content": str(accountant_answer)})
         agent_prompt = None
         final_answer = None
         if 'deductions' in accountant_answer:
@@ -74,13 +91,13 @@ class AgentEnvironment:
             next_agent = "percentage"
             agent_prompt = accountant_answer['percentage']
         elif 'answer' in accountant_answer:
-            next_agent = "END"
+            next_agent = "pricer"
             final_answer = accountant_answer['answer']
         else:
-            next_agent = "END"
+            next_agent = "pricer"
             final_answer = accountant_answer
         return {'next_agent': next_agent, 'agent_prompt': agent_prompt, 'answer': final_answer,
-                'chat_history': chat_history}
+                'reasoning': reasoning, 'chat_history': chat_history, 'token_usage_history': token_usage_history}
 
     def _select_agent(self, state: AgentState):
         """
@@ -95,28 +112,42 @@ class AgentEnvironment:
         return state['next_agent']
 
     def process_calculator(self, state: AgentState):
+        reasoning = state['reasoning']
         chat_history = state['chat_history']
-        calculator_answer = self.calculator.answer(state['agent_prompt'])
+        token_usage_history = state['token_usage_history']
+        calculator_answer, token_usage = self.calculator.answer(state['agent_prompt'])
+        token_usage_history.append(token_usage)
         print(calculator_answer)
-        chat_history.append({"role": "user", "content": str(calculator_answer)})
-        return {"chat_history": chat_history}
+        reasoning.append({"role": "user", "content": str(calculator_answer['calculator'])})
+        chat_history.append({"role": "calculator", "content": str(calculator_answer)})
+        return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
     def process_percentage(self, state: AgentState):
+        reasoning = state['reasoning']
         chat_history = state['chat_history']
-        percentage_answer = self.percentage.answer(state['agent_prompt'])
+        token_usage_history = state['token_usage_history']
+        percentage_answer, token_usage = self.percentage.answer(state['agent_prompt'])
+        token_usage_history.append(token_usage)
         print(percentage_answer)
-        chat_history.append({"role": "user", "content": str(percentage_answer)})
-        return {"chat_history": chat_history}
+        reasoning.append({"role": "user", "content": str(percentage_answer['percentage'])})
+        chat_history.append({"role": "percentage", "content": str(percentage_answer)})
+        return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
     def process_deductions(self, state: AgentState):
+        reasoning = state['reasoning']
         chat_history = state['chat_history']
-        deductions_answer = self.deductions.answer(state['agent_prompt'])
+        token_usage_history = state['token_usage_history']
+        deductions_answer, token_usage = self.deductions.answer(state['agent_prompt'])
+        token_usage_history.append(token_usage)
         print(deductions_answer)
-        chat_history.append({"role": "user", "content": str(deductions_answer)})
-        return {"chat_history": chat_history}
+        reasoning.append({"role": "user", "content": str(deductions_answer['deductions'])})
+        chat_history.append({"role": "deductions", "content": str(deductions_answer)})
+        return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
-
-abot = AgentEnvironment()
-question = ("How much do I have to pay in taxes for next june? My income is $3000000, I have paid car=$50000000, house "
-            "rental=$20000000, fridge=100000 and books=50000. I have already paid $200000 in taxes.")
-answer = abot.graph.invoke({"question": question})
+    def pricer(self, state: AgentState):
+        token_usage_history = state['token_usage_history']
+        total_tokens = sum([sum(i) for i in token_usage_history])
+        input_tokens = token_usage_history[0][0]
+        output_tokens = token_usage_history[-1][1]
+        reasoning_tokens = total_tokens - input_tokens - output_tokens
+        return {"input_tokens": input_tokens, "reasoning_tokens": reasoning_tokens, 'output_tokens': output_tokens}
