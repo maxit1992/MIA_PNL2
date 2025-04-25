@@ -1,7 +1,7 @@
 """
-This script implements a Streamlit-based CV agent bot application. The application allows users to upload up to 3 CVs,
-process them to extract chunks of text, store the chunks in a vector database, and interact with agent bots that
-coordinate themselves to answer questions about the uploaded CVs.
+This script implements a Streamlit-based tax bot application. The application allows users ask how much tax they have
+to pay next month based on their monthly income, deductions, and the current month. The bot uses a series of agents and
+reasoning to provide an accurate response.
 """
 
 import streamlit as st

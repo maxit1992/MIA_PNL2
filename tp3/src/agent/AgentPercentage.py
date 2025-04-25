@@ -6,12 +6,12 @@ from .client.SingletonGroq import SingletonGroq
 
 class AgentPercentage:
     """
-    This class handles a single agent that decides which agents should be asked to retrieve information for the final
-    answer.
+    This class assists in getting the tax fixed amount, base surplus, and percentage over the surplus for a given
+    taxable income. It reads tax data from a CSV file and uses a LLM to process the information.
     """
     AGENT_PERCENTAGE_PROMPT = sys_prompt = """Instructions:
-- You are a helpful assistant. You receive a total taxable income and return a fixed tax amount and a percentage of the surplus.
-- Use the provided table to get the values.
+- You are a helpful assistant. You receive a total taxable income and return a fixed tax amount, a base surplus and a percentage of the surplus.
+- Use the provided table to get the values. Return the values for which the input is between the ranges.
 - Return a response in the format {'percentage':'the fixed amount, the base surplus and the surplus percentage'} without additional text. 
     """
 
@@ -25,13 +25,13 @@ class AgentPercentage:
     @staticmethod
     def read_csv(file_path):
         """
-        Reads a CSV file and returns its content as a list of dictionaries.
+        Reads a CSV file and returns its content.
 
         Args:
             file_path (str): The path to the CSV file.
 
         Returns:
-            list: A list of dictionaries where each dictionary represents a row in the CSV file.
+            list: A list with the rows in the CSV file.
         """
         data = []
         with open(file_path, mode='r', encoding='utf-8-sig') as file:
@@ -42,29 +42,20 @@ class AgentPercentage:
 
     def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
-        Decides which agents are involved in the user question and the question to be asked to the agents.
+        Returns the fixed amount, base surplus and percentage over the surplus for a given taxable income.
 
         Args:
-            question (str): The user's question.
-            agents (list): The agents name list.
+            question (str): The question with the taxable amount.
+
         Returns:
-            str: The output with the agents involved and the question to be asked to the agents.
+            tuple: The tax values and the token usage. If the answer is not found, returns a default value.
         """
         sys_prompt = f"""{self.AGENT_PERCENTAGE_PROMPT}
 
         Tax data:
         {self.tax_data}"""
         chat_completion = self.client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": sys_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": question,
-                }
-            ],
+            messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": question}],
             model="llama-3.3-70b-versatile",
             temperature=0
         )

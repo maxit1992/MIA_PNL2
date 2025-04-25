@@ -23,8 +23,7 @@ class AgentState(TypedDict):
 
 class AgentEnvironment:
     """
-    This class manages the environment for coordinating multiple agents to answer user questions based on CV data.
-    It initializes the agents, sets up a state graph, and orchestrates the flow of information between agents.
+    This class orchestrates the interaction between different agents to answer user questions about tax calculations.
     """
 
     def __init__(self):
@@ -54,13 +53,14 @@ class AgentEnvironment:
 
     def process_accountant(self, state: AgentState):
         """
-        Determines which agents are required to answer the user's question and generates the prompt for them.
+        Performs an accountant reasoning step and updates the state with the next agent to be called or the final
+        answer.
 
         Args:
             state (AgentState): The current state of the environment.
 
         Returns:
-            dict: Updated state with the required agents, their prompt, and chat history.
+            dict: Updated state with the next agent and the agent prompt or the final answer, among other information.
         """
         if 'reasoning' in state:
             reasoning = state['reasoning']
@@ -112,6 +112,15 @@ class AgentEnvironment:
         return state['next_agent']
 
     def process_calculator(self, state: AgentState):
+        """
+        Processes the calculator reasoning and updates the state with the calculation result.
+
+        Args:
+            state (AgentState): The current state of the environment.
+
+        Returns:
+            dict: Updated state with the calculator answer, among other information.
+        """
         reasoning = state['reasoning']
         chat_history = state['chat_history']
         token_usage_history = state['token_usage_history']
@@ -123,6 +132,15 @@ class AgentEnvironment:
         return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
     def process_percentage(self, state: AgentState):
+        """
+        Processes the percentage reasoning and updates the state with the tax values to apply.
+
+        Args:
+            state (AgentState): The current state of the environment.
+
+        Returns:
+            dict: Updated state with the percentage answer, among other information.
+        """
         reasoning = state['reasoning']
         chat_history = state['chat_history']
         token_usage_history = state['token_usage_history']
@@ -134,6 +152,15 @@ class AgentEnvironment:
         return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
     def process_deductions(self, state: AgentState):
+        """
+        Processes the deductions reasoning and updates the state with the deduction amounts.
+
+        Args:
+            state (AgentState): The current state of the environment.
+
+        Returns:
+            dict: Updated state with the deductions answer, among other information.
+        """
         reasoning = state['reasoning']
         chat_history = state['chat_history']
         token_usage_history = state['token_usage_history']
@@ -145,6 +172,15 @@ class AgentEnvironment:
         return {"reasoning": reasoning, "chat_history": chat_history, 'token_usage_history': token_usage_history}
 
     def pricer(self, state: AgentState):
+        """
+        Calculates the tokens used to get the answer.
+
+        Args:
+            state (AgentState): The current state of the environment.
+
+        Returns:
+            dict: Updated state with the token usage information.
+        """
         token_usage_history = state['token_usage_history']
         total_tokens = sum([sum(i) for i in token_usage_history])
         input_tokens = token_usage_history[0][0]

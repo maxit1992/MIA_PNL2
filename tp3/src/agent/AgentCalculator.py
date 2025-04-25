@@ -5,8 +5,8 @@ from .client.SingletonGroq import SingletonGroq
 
 class AgentCalculator:
     """
-    This class handles a single agent that decides which agents should be asked to retrieve information for the final
-    answer.
+    This class performs the role of a calculator agent, helping with mathematical calculations.
+    It uses a LLM to process the formula in natural language.
     """
     AGENT_CALCULATOR_PROMPT = """Instructions:
 - You are a helpful calculator. You execute math.
@@ -22,25 +22,17 @@ class AgentCalculator:
 
     def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
-        Decides which agents are involved in the user question and the question to be asked to the agents.
+        Answers the mathematical question.
 
         Args:
             question (str): The user's question.
-            agents (list): The agents name list.
+
         Returns:
-            str: The output with the agents involved and the question to be asked to the agents.
+            tuple: The calculation result and the token usage. If the answer is not found, returns a default value.
         """
         chat_completion = self.client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": self.AGENT_CALCULATOR_PROMPT,
-                },
-                {
-                    "role": "user",
-                    "content": question,
-                }
-            ],
+            messages=[{"role": "system", "content": self.AGENT_CALCULATOR_PROMPT},
+                      {"role": "user", "content": question}],
             model="llama-3.3-70b-versatile",
             temperature=0
         )

@@ -6,8 +6,9 @@ from .client.SingletonGroq import SingletonGroq
 
 class AgentDeductions:
     """
-    This class handles a single agent that decides which agents should be asked to retrieve information for the final
-    answer.
+    This class performs the role of a deductions assistant, helping to determine which expenses apply to a tax
+    deduction. It reads the deducible categories from a CSV file and uses a LLM with reasoning to process the
+    information.
     """
     AGENT_DEDUCTION_PROMPT = sys_prompt = """Instructions:
 - You are a helpful deductions assistant. You determine which users expenses apply to a tax reduction.
@@ -28,13 +29,13 @@ class AgentDeductions:
     @staticmethod
     def read_csv(file_path):
         """
-        Reads a CSV file and returns its content as a list of dictionaries.
+        Reads a CSV file and returns its content.
 
         Args:
             file_path (str): The path to the CSV file.
 
         Returns:
-            list: A list of dictionaries where each dictionary represents a row in the CSV file.
+            list: A list with the rows in the CSV file.
         """
         data = []
         with open(file_path, mode='r', encoding='utf-8-sig') as file:
@@ -45,29 +46,20 @@ class AgentDeductions:
 
     def answer(self, question: str) -> tuple[dict[str, str], tuple[int, int]]:
         """
-        Decides which agents are involved in the user question and the question to be asked to the agents.
+        Returns the applicable deductible categories with the deductible amount based on the input.
 
         Args:
-            question (str): The user's question.
-            agents (list): The agents name list.
+            question (str): The question with the declared deductions.
+
         Returns:
-            str: The output with the agents involved and the question to be asked to the agents.
+            tuple: The deduction values and the token usage. If the answer is not found, returns a default value.
         """
         sys_prompt = f"""{self.AGENT_DEDUCTION_PROMPT}
 
         Deductions data:
         {self.deductions_data}"""
         chat_completion = self.client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": sys_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": question,
-                }
-            ],
+            messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": question}],
             model="llama-3.3-70b-versatile",
             temperature=0
         )

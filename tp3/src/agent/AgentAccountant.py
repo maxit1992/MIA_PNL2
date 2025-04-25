@@ -5,8 +5,8 @@ from .client.SingletonGroq import SingletonGroq
 
 class AgentAccountant:
     """
-    This class handles a single agent that decides which agents should be asked to retrieve information for the final
-    answer.
+    This class performs the role of an accountant assistant, helping users calculate their tax amount to be paid next
+    month. It uses a LLM and reasoning for a better performance.
     """
     AGENT_ACCOUNTANT_PROMPT = sys_prompt = """Instructions:
 - You are a helpful accountant assistant, you helps the user calculating the tax amount to pay next month.
@@ -36,13 +36,16 @@ class AgentAccountant:
 
     def answer(self, question: str, reasoning: list = None) -> tuple[dict[str, str], tuple[int, int]]:
         """
-        Decides which agents are involved in the user question and the question to be asked to the agents.
+        Returns a reasoning step. If the step requires the help of another agent, it returns the question to be asked to
+        them. If the step is the final answer, it returns the final answer.
 
         Args:
-            question (str): The user's question.
-            agents (list): The agents name list.
+            question (str): The user prompt.
+            reasoning (list): The reasoning steps already taken.
+
         Returns:
-            str: The output with the agents involved and the question to be asked to the agents.
+            tuple: The answer with the reasoning step and the token usage. If the answer is not found, returns a default
+             value.
         """
         messages = [{"role": "system", "content": self.AGENT_ACCOUNTANT_PROMPT},
                     {"role": "user", "content": question}]
