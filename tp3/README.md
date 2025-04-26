@@ -10,9 +10,9 @@ The system has 4 agents:
 - Accountant: responsible to handling the main tax calculation, step by step. It calls other agents to get the
   information needed and keeps reasoning based on chat history until the final answer is reached.
 - Calculator: makes math calculations.
-- Deductions manager: interprets the allowed deductions from a [csv tables](/resources/deductions_data.csv) and then
+- Deductions manager: interprets the allowed deductions from a [csv tables](./resources/deductions_data.csv) and then
   parses the user's declaration to apply only the allowed categories with the maximum allowed amounts.
-- Tax table manager: interprets the tax table from a [csv tables](/resources/tax_data.csv) and then returns the
+- Tax table manager: interprets the tax table from a [csv tables](./resources/tax_data.csv) and then returns the
   applicable tax indexes values based on annual taxable amount.
 
 ## Requirements
