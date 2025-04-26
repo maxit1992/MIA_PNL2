@@ -21,7 +21,7 @@ for message in st.session_state['messages']:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-question = st.chat_input("Input the data:")
+question = st.chat_input("Input the data:", key="user_question")
 
 if "tax_bot" not in st.session_state:
     st.session_state["tax_bot"] = AgentEnvironment()
