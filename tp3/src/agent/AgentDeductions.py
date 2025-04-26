@@ -13,10 +13,11 @@ class AgentDeductions:
     AGENT_DEDUCTION_PROMPT = sys_prompt = """Instructions:
 - You are a helpful deductions assistant. You determine which users expenses apply to a tax reduction.
 - Use the provided table that shows the applicable deduction categories with the maximum deductible amount.
-- Always apply the general deduction category.
-- If a user expense falls into a deductible category, apply the deductible amount declared by the user up to the maximum allowed for that category.
+- Always apply the general deduction category. 
+- If a user expense does not fall into a non general category, skip it.
+- If a user expense falls into a not general category deductible category, apply the deductible amount declared by the user up to the maximum allowed for that category. 
 - Think step by step
-- Return a response in the format {'thought': 'your line of thought', 'deductions': 'the deduction amounts with categories'} without additional text. 
+- Return a response in the format {'thought': 'your line of thought', 'deductions': 'Applicable deductions: the deduction amounts with categories'} without additional text. 
     """
 
     def __init__(self, file_path):
@@ -60,8 +61,7 @@ class AgentDeductions:
         {self.deductions_data}"""
         chat_completion = self.client.chat.completions.create(
             messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": question}],
-            model="llama-3.3-70b-versatile",
-            temperature=0
+            model="llama-3.3-70b-versatile"
         )
         try:
             usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)

@@ -37,6 +37,8 @@ streamlit run src/main.py
 
 This will launch the Streamlit app in your default web browser. Then you have to ask the bot how much tax you have to
 pay, providing your monthly income, your expenses that may be deductible and the current month.
+E.g.: "How much tax do I have to pay next month (June) if I earn 1000000, and I have spent 3000000 in rental and 1000000
+in fuel?".
 
 ## Features
 

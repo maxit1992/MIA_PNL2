@@ -54,8 +54,7 @@ class AgentAccountant:
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model="llama-3.3-70b-versatile",
-            max_tokens=5000,
-            temperature=0
+            max_tokens=5000
         )
         try:
             usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)

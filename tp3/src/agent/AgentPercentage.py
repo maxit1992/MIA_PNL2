@@ -12,7 +12,8 @@ class AgentPercentage:
     AGENT_PERCENTAGE_PROMPT = sys_prompt = """Instructions:
 - You are a helpful assistant. You receive a total taxable income and return a fixed tax amount, a base surplus and a percentage of the surplus.
 - Use the provided table to get the values. Return the values for which the input is between the ranges.
-- Return a response in the format {'percentage':'the fixed amount, the base surplus and the surplus percentage'} without additional text. 
+- Think step by step.
+- Return a response in the format {'thought': 'your line of thought', 'percentage':'the fixed amount, the base surplus and the surplus percentage'} without additional text.
     """
 
     def __init__(self, file_path):
@@ -56,8 +57,7 @@ class AgentPercentage:
         {self.tax_data}"""
         chat_completion = self.client.chat.completions.create(
             messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": question}],
-            model="llama-3.3-70b-versatile",
-            temperature=0
+            model="llama-3.3-70b-versatile"
         )
         try:
             usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)

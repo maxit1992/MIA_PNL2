@@ -33,8 +33,7 @@ class AgentCalculator:
         chat_completion = self.client.chat.completions.create(
             messages=[{"role": "system", "content": self.AGENT_CALCULATOR_PROMPT},
                       {"role": "user", "content": question}],
-            model="llama-3.3-70b-versatile",
-            temperature=0
+            model="llama-3.3-70b-versatile"
         )
         try:
             usage_tokens = (chat_completion.usage.prompt_tokens, chat_completion.usage.completion_tokens)

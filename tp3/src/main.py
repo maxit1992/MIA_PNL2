@@ -14,8 +14,8 @@ st.title("Tax Calculator Bot")
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
     greeting = (
-        "Hello I'm your tax calculator bot. Give me your monthly income, your deductions, the current month, and I will"
-        " calculate the tax amount to be paid next month.")
+        "Hello I'm your tax calculator bot. Give me your monthly income, your deductions, the current month, how much "
+        "you have already paid,  and I will calculate the tax amount to be paid next month.")
     st.session_state['messages'].append({"role": "assistant", "content": greeting})
 for message in st.session_state['messages']:
     with st.chat_message(message["role"]):
